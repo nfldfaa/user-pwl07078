@@ -7,8 +7,10 @@ if (!isset($conn) || $conn->connect_error) {
     die("Koneksi database gagal: " . (isset($conn) ? $conn->connect_error : "Variabel koneksi tidak terdefinisi"));
 }
 
-$dataPerHalaman = isset($_GET['dataPerHalaman']) ? (int)$_GET['dataPerHalaman'] : 10;
-$cari = isset($_GET['cari']) ? $conn->real_escape_string($_GET['cari']) : '';
+// Pastikan variabel ini tersedia
+$cari = isset($_GET['cari']) ? $_GET['cari'] : '';
+$halAktif = isset($_GET['hal']) ? (int)$_GET['hal'] : 1;
+$dataPerHalaman = isset($_GET['dataPerHalaman']) ? (int)$_GET['dataPerHalaman'] : 5;
 
 // Query dasar dengan proteksi SQL injection
 $sql = "SELECT * FROM user";
@@ -106,20 +108,25 @@ if ($hasil === false) {
         </table>
 
         <nav>
-            <ul class="pagination justify-content-center">
-                <?php if ($halAktif > 1) { ?>
-                    <li class="page-item"><a class="page-link" href="?hal=<?php echo $halAktif - 1; ?>&cari=<?php echo urlencode($cari); ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>">Previous</a></li>
-                <?php }
-                for ($i = 1; $i <= $jmlHal; $i++) { ?>
-                    <li class="page-item <?php echo ($i == $halAktif) ? 'active' : ''; ?>">
-                        <a class="page-link" href="?hal=<?php echo $i; ?>&cari=<?php echo urlencode($cari); ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>"> <?php echo $i; ?> </a>
-                    </li>
-                <?php }
-                if ($halAktif < $jmlHal) { ?>
-                    <li class="page-item"><a class="page-link" href="?hal=<?php echo $halAktif + 1; ?>&cari=<?php echo urlencode($cari); ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>">Next</a></li>
-                <?php } ?>
-            </ul>
-        </nav>
+    <ul class="pagination justify-content-center">
+        <!-- Tombol Previous -->
+        <li class="page-item <?= ($halAktif <= 1) ? 'disabled' : '' ?>">
+            <a class="page-link" href="?hal=<?= $halAktif - 1 ?>&cari=<?= urlencode($cari) ?>&dataPerHalaman=<?= $dataPerHalaman ?>">Previous</a>
+        </li>
+
+        <!-- Nomor halaman -->
+        <?php for ($i = 1; $i <= $jmlHal; $i++): ?>
+            <li class="page-item <?= ($i == $halAktif) ? 'active' : '' ?>">
+                <a class="page-link" href="?hal=<?= $i ?>&cari=<?= urlencode($cari) ?>&dataPerHalaman=<?= $dataPerHalaman ?>"><?= $i ?></a>
+            </li>
+        <?php endfor; ?>
+
+        <!-- Tombol Next -->
+        <li class="page-item <?= ($halAktif >= $jmlHal) ? 'disabled' : '' ?>">
+            <a class="page-link" href="?hal=<?= $halAktif + 1 ?>&cari=<?= urlencode($cari) ?>&dataPerHalaman=<?= $dataPerHalaman ?>">Next</a>
+        </li>
+    </ul>
+</nav>
     </div>
 
     <script>

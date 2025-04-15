@@ -4,6 +4,17 @@ include 'koneksi.php';
 if (!isset($conn) || $conn->connect_error) {
     die("Koneksi database gagal. Silakan cek file koneksi.php");
 }
+
+// Pagination & Limit
+$limitOptions = [4, 8, 20, 40, 100];
+$limit = isset($_GET['limit']) && in_array((int)$_GET['limit'], $limitOptions) ? (int)$_GET['limit'] : 4;
+$page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
+$offset = ($page - 1) * $limit;
+
+// Get data
+$total = $conn->query("SELECT COUNT(*) as total FROM galeri_gambar")->fetch_assoc()['total'];
+$totalPages = ceil($total / $limit);
+$result = $conn->query("SELECT * FROM galeri_gambar ORDER BY uploaded_at DESC LIMIT $limit OFFSET $offset");
 ?>
 
 <!DOCTYPE html>
@@ -13,161 +24,137 @@ if (!isset($conn) || $conn->connect_error) {
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" type="text/css" href="css/styleku.css">
+    <link rel="stylesheet" href="css/styleku.css">
     <script src="bootstrap/js/bootstrap.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-    
     <style>
-        .gallery-container {
-            padding: 20px;
-        }
-        .upload-section {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 5px;
-            margin-bottom: 30px;
-        }
-        .gallery-item {
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        .gallery-img {
-            max-width: 100%;
-            height: auto;
-            display: block;
-            transition: all 0.3s;
+        .gallery-img:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
         }
         .card-img-top {
             height: 200px;
             object-fit: cover;
         }
-        .gallery-img:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .file-info {
-            margin-top: 5px;
-            font-size: 0.9em;
-        }
-        .error-message {
-            color: #dc3545;
-            margin-top: 5px;
-        }
-        #galleryContainer {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
     </style>
 </head>
 <body>
 <?php require "head.html"; ?>
-    <div class="container gallery-container">
-        <h2 class="text-center mb-4">GALERI GAMBAR</h2>
-        
-        <!-- Form Upload -->
-        <div class="upload-section">
-            <h4 class="text-center mb-3">Unggah Gambar Baru</h4>
-            <form id="uploadForm" method="post" enctype="multipart/form-data">
-                <div class="form-group">
-                    <div class="custom-file">
-                        <input type="file" class="custom-file-input" id="gambar" name="gambar" accept="image/jpeg,image/png,image/gif" required>
-                        <label class="custom-file-label" for="gambar">Pilih file gambar (JPEG, PNG, GIF)</label>
-                    </div>
-                    <small class="form-text text-muted">Ukuran maksimal: 10MB</small>
-                    <div id="fileError" class="error-message"></div>
-                </div>
-                <button type="submit" class="btn btn-primary">Unggah</button>
-            </form>
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">GALERI GAMBAR</h2>
+
+    <!-- Upload Form -->
+    <div class="upload-section mb-4 p-4 bg-light rounded">
+        <form id="uploadForm" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="gambar">Upload Gambar (JPEG, PNG, GIF)</label>
+                <input type="file" name="gambar" id="gambar" class="form-control" required>
+                <small class="form-text text-muted">Ukuran maksimal: 10MB</small>
+                <div id="fileError" class="text-danger mt-1"></div>
+            </div>
+            <button type="submit" class="btn btn-primary">Unggah</button>
             <div id="uploadMessage" class="mt-3"></div>
-        </div>
-        
-        <!-- Galeri Gambar -->
-        <div class="row" id="galleryContainer">
-            <?php
-            $result = $conn->query("SELECT * FROM galeri_gambar ORDER BY uploaded_at DESC");
-            if ($result->num_rows > 0) {
-                while ($row = $result->fetch_assoc()) {
-                    echo '<div class="col-md-3 mb-4 gallery-item">';
-                    echo '<div class="card h-100">';
-                    echo '<a href="' . $row['filepath'] . '" target="_blank">';
-                    echo '<img src="' . $row['thumbpath'] . '" class="card-img-top gallery-img" alt="' . htmlspecialchars($row['filename']) . '">';
-                    echo '</a>';
-                    echo '<div class="card-body">';
-                    echo '<p class="card-text small text-truncate">' . htmlspecialchars($row['filename']) . '</p>';
-                    echo '</div>';
-                    echo '</div>';
-                    echo '</div>';
-                }
-            } else {
-                echo '<div class="col-12"><div class="alert alert-info">Belum ada gambar yang diupload</div></div>';
-            }
-            ?>
-        </div>
+        </form>
     </div>
 
-    <script>
-    $(document).ready(function() {
-        // Update label nama file
-        $('.custom-file-input').on('change', function() {
-            let fileName = $(this).val().split('\\').pop();
-            $(this).next('.custom-file-label').html(fileName);
-            
-            // Validasi ukuran file
-            const file = this.files[0];
-            const maxSize = 10 * 1024 * 1024; // 10MB
-            
-            if (file && file.size > maxSize) {
-                $('#fileError').text('Ukuran file terlalu besar (maks 10MB)');
-                $(this).val('');
-                $(this).next('.custom-file-label').html('Pilih file gambar (JPEG, PNG, GIF)');
-            } else {
-                $('#fileError').text('');
+    <!-- Filter Jumlah -->
+    <form method="get" class="form-inline mb-3">
+        <label for="limit" class="mr-2">Tampilkan:</label>
+        <select name="limit" id="limit" class="form-control mr-2" onchange="this.form.submit()">
+            <?php foreach ($limitOptions as $opt): ?>
+                <option value="<?= $opt ?>" <?= ($opt === $limit) ? 'selected' : '' ?>><?= $opt ?></option>
+            <?php endforeach; ?>
+        </select>
+        <span>gambar per halaman</span>
+    </form>
+
+    <!-- Galeri -->
+    <div class="row" id="galleryContainer">
+        <?php if ($result->num_rows > 0): ?>
+            <?php while ($row = $result->fetch_assoc()): ?>
+                <div class="col-md-3 mb-4">
+                    <div class="card h-100">
+                        <a href="<?= $row['filepath'] ?>" target="_blank">
+                            <img src="<?= $row['thumbpath'] ?>" class="card-img-top gallery-img" alt="<?= htmlspecialchars($row['filename']) ?>">
+                        </a>
+                        <div class="card-body">
+                            <p class="card-text small text-truncate"><?= htmlspecialchars($row['filename']) ?></p>
+                            <a href="editGambar.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="hpsGambar.php?id=<?= $row['id'] ?>" class="btn btn-sm btn-danger" onclick="return confirm('Yakin ingin menghapus gambar ini?')">Hapus</a>
+                        </div>
+                    </div>
+                </div>
+            <?php endwhile; ?>
+        <?php else: ?>
+            <div class="col-12">
+                <div class="alert alert-info">Belum ada gambar yang diupload.</div>
+            </div>
+        <?php endif; ?>
+    </div>
+
+    <!-- Pagination -->
+<nav>
+    <ul class="pagination justify-content-center">
+        <!-- Tombol Sebelumnya -->
+        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+            <a class="page-link" href="?page=<?= $page - 1 ?>&limit=<?= $limit ?>" tabindex="-1">Sebelumnya</a>
+        </li>
+
+        <!-- Tombol Halaman Angka -->
+        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+            <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                <a class="page-link" href="?page=<?= $i ?>&limit=<?= $limit ?>"><?= $i ?></a>
+            </li>
+        <?php endfor; ?>
+
+        <!-- Tombol Berikutnya -->
+        <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+            <a class="page-link" href="?page=<?= $page + 1 ?>&limit=<?= $limit ?>">Berikutnya</a>
+        </li>
+    </ul>
+</nav>
+</div>
+
+<script>
+$(document).ready(function() {
+    $('#gambar').on('change', function() {
+        const file = this.files[0];
+        const maxSize = 10 * 1024 * 1024;
+
+        if (file && file.size > maxSize) {
+            $('#fileError').text('Ukuran file terlalu besar (maks 10MB)');
+            this.value = '';
+        } else {
+            $('#fileError').text('');
+        }
+    });
+
+    $('#uploadForm').on('submit', function(e) {
+        e.preventDefault();
+        let formData = new FormData(this);
+        $('#uploadMessage').removeClass().text('');
+
+        $.ajax({
+            url: 'sv_galeriGambar.php',
+            type: 'POST',
+            data: formData,
+            contentType: false,
+            processData: false,
+            dataType: 'json',
+            success: function(response) {
+                if (response.status === 'success') {
+                    location.reload();
+                } else {
+                    $('#uploadMessage').addClass('alert alert-danger').text('Error: ' + response.message);
+                }
+            },
+            error: function() {
+                $('#uploadMessage').addClass('alert alert-danger').text('Terjadi kesalahan saat mengunggah.');
             }
         });
-        
-        // Handle form submission dengan AJAX
-        $('#uploadForm').on('submit', function(e) {
-            e.preventDefault();
-            var formData = new FormData(this);
-            $('#uploadMessage').html('').removeClass('alert-danger alert-success');
-            
-            $.ajax({
-                url: 'sv_galeriGambar.php',
-                type: 'POST',
-                data: formData,
-                processData: false,
-                contentType: false,
-                dataType: 'json',
-                success: function(response) {
-                    if (response.status === 'success') {
-                        // Tambahkan gambar baru ke galeri
-                        var newItem = `
-                            <div class="col-md-3 mb-4 gallery-item">
-                                <div class="card h-100">
-                                    <a href="${response.filepath}" target="_blank">
-                                        <img src="${response.thumbnail}" class="card-img-top gallery-img" alt="${response.filename}">
-                                    </a>
-                                    <div class="card-body">
-                                        <p class="card-text small text-truncate">${response.filename}</p>
-                                    </div>
-                                </div>
-                            </div>`;
-                        
-                        $('#galleryContainer').prepend(newItem);
-                        $('#uploadMessage').addClass('alert alert-success').html('Upload berhasil!');
-                        $('#uploadForm')[0].reset();
-                        $('.custom-file-label').html('Pilih file gambar (JPEG, PNG, GIF)');
-                    } else {
-                        $('#uploadMessage').addClass('alert alert-danger').html('Error: ' + response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    $('#uploadMessage').addClass('alert alert-danger').html('Terjadi kesalahan: ' + error);
-                }
-            });
-        });
     });
-    </script>
+});
+</script>
 </body>
 </html>

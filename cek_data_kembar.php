@@ -26,7 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['iduser'])) {
 
 // Setup pagination dan pencarian
 $cari = isset($_GET['cari']) ? $_GET['cari'] : '';
-$dataPerHalaman = isset($_GET['dataPerHalaman']) ? (int)$_GET['dataPerHalaman'] : 10;
+$dataPerHalaman = isset($_GET['dataPerHalaman']) ? (int)$_GET['dataPerHalaman'] : 5;
 $halAktif = isset($_GET['hal']) ? (int)$_GET['hal'] : 1;
 $offset = ($halAktif - 1) * $dataPerHalaman;
 
@@ -108,22 +108,25 @@ $jmlHal = ceil($totalData / $dataPerHalaman);
 
     <!-- Navigasi halaman -->
     <nav>
-        <ul class="pagination justify-content-center">
-            <?php if ($halAktif > 1): ?>
-                <li class="page-item"><a class="page-link" href="?hal=<?= $halAktif - 1 ?>&cari=<?= $cari ?>&dataPerHalaman=<?= $dataPerHalaman ?>">Sebelumnya</a></li>
-            <?php endif; ?>
+    <ul class="pagination justify-content-center">
+        <!-- Tombol Sebelumnya -->
+        <li class="page-item <?= ($halAktif <= 1) ? 'disabled' : '' ?>">
+            <a class="page-link" href="<?= ($halAktif > 1) ? '?hal=' . ($halAktif - 1) . '&cari=' . urlencode($cari) . '&dataPerHalaman=' . $dataPerHalaman : '#' ?>" tabindex="-1">Sebelumnya</a>
+        </li>
 
-            <?php for ($i = 1; $i <= $jmlHal; $i++): ?>
-                <li class="page-item <?= ($i == $halAktif) ? 'active' : '' ?>">
-                    <a class="page-link" href="?hal=<?= $i ?>&cari=<?= $cari ?>&dataPerHalaman=<?= $dataPerHalaman ?>"><?= $i ?></a>
-                </li>
-            <?php endfor; ?>
+        <!-- Nomor halaman -->
+        <?php for ($i = 1; $i <= $jmlHal; $i++): ?>
+            <li class="page-item <?= ($i == $halAktif) ? 'active' : '' ?>">
+                <a class="page-link" href="?hal=<?= $i ?>&cari=<?= urlencode($cari) ?>&dataPerHalaman=<?= $dataPerHalaman ?>"><?= $i ?></a>
+            </li>
+        <?php endfor; ?>
 
-            <?php if ($halAktif < $jmlHal): ?>
-                <li class="page-item"><a class="page-link" href="?hal=<?= $halAktif + 1 ?>&cari=<?= $cari ?>&dataPerHalaman=<?= $dataPerHalaman ?>">Berikutnya</a></li>
-            <?php endif; ?>
-        </ul>
-    </nav>
+        <!-- Tombol Berikutnya -->
+        <li class="page-item <?= ($halAktif >= $jmlHal) ? 'disabled' : '' ?>">
+            <a class="page-link" href="<?= ($halAktif < $jmlHal) ? '?hal=' . ($halAktif + 1) . '&cari=' . urlencode($cari) . '&dataPerHalaman=' . $dataPerHalaman : '#' ?>">Berikutnya</a>
+        </li>
+    </ul>
+</nav>
 </div>
 </body>
 </html>

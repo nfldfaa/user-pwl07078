@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 15 Apr 2025 pada 16.33
+-- Waktu pembuatan: 15 Apr 2025 pada 17.40
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -42,10 +42,12 @@ CREATE TABLE `galeri_gambar` (
 --
 
 INSERT INTO `galeri_gambar` (`id`, `filename`, `filepath`, `thumbpath`, `width`, `height`, `uploaded_at`) VALUES
-(5, 'farmer (2).png', 'gambar/uploads/67fe597786454_1744722295.png', 'gambar/thumbs/thumb_67fe597786454_1744722295.png', 512, 512, 2147483647),
-(6, 'animal (1).png', 'gambar/uploads/67fe5b871de86_1744722823.png', 'gambar/thumbs/thumb_67fe5b871de86_1744722823.png', 512, 512, 2147483647),
-(7, 'watering-can.png', 'gambar/uploads/67fe5bcc145af_1744722892.png', 'gambar/thumbs/thumb_67fe5bcc145af_1744722892.png', 512, 512, 2147483647),
-(8, 'talking.png', 'gambar/uploads/67fe6d7b4311d_1744727419.png', 'gambar/thumbs/thumb_67fe6d7b4311d_1744727419.png', 512, 512, 2147483647);
+(5, 'Farmer', 'gambar/uploads/67fe597786454_1744722295.png', 'gambar/thumbs/thumb_67fe597786454_1744722295.png', 512, 512, 2147483647),
+(6, 'Sapi', 'gambar/uploads/67fe5b871de86_1744722823.png', 'gambar/thumbs/thumb_67fe5b871de86_1744722823.png', 512, 512, 2147483647),
+(7, 'Pupuk', 'gambar/uploads/67fe5bcc145af_1744722892.png', 'gambar/thumbs/thumb_67fe5bcc145af_1744722892.png', 512, 512, 2147483647),
+(9, 'Beras', 'gambar/uploads/67fe78e0347e1_1744730336.jpg', 'gambar/thumbs/thumb_67fe78e0347e1_1744730336.jpg', 1054, 1054, 2147483647),
+(10, 'Daging', 'gambar/uploads/67fe792d7f629_1744730413.png', 'gambar/thumbs/thumb_67fe792d7f629_1744730413.png', 1024, 1024, 2147483647),
+(12, 'Dokter', 'gambar/uploads/67fe7d5f57fcd_1744731487.png', 'gambar/thumbs/thumb_67fe7d5f57fcd_1744731487.png', 512, 512, 2147483647);
 
 -- --------------------------------------------------------
 
@@ -70,7 +72,6 @@ INSERT INTO `user` (`iduser`, `username`, `password`, `status`) VALUES
 (6, '', '$2y$10$1b5oaRuT3biUaZJYwkZ7muqzd', ''),
 (7, 'nfldfaa_', '$2y$10$p5Fml4QkjZQV6Jv0LSmv5O5s7', 'hadir'),
 (8, 'nfldfaa_', '$2y$10$kqThsDhzM9n9g2RU6h8dou08E', 'hadir'),
-(9, 'nfldfaa_', '$2y$10$MLb3ODAjDlB1zLjJNavcxO7xN', 'hadir'),
 (11, 'ewfewsvfzv', 'sfvesfesf', 'svsfs'),
 (12, 'dadaefcaec', '$2y$10$2mG1GtGhFjAX0tWpO7XwbuXRc', 'aca'),
 (14, 'sacasc', '12345', 'cacad'),
@@ -78,7 +79,8 @@ INSERT INTO `user` (`iduser`, `username`, `password`, `status`) VALUES
 (16, 'cc', '1', '1'),
 (17, 'Daffa Naufal Athallah', 'DaffaGantenf01', 'hadir'),
 (18, 'Naufal Daffa', 'Pipiyo01', 'Izin'),
-(21, 'daffaganteng', 'pipiyo04', 'hadir');
+(21, 'daffaganteng', 'pipiyo04', 'hadir'),
+(22, 'athaa_uiux', '070604', 'keren');
 
 --
 -- Indexes for dumped tables
@@ -104,13 +106,13 @@ ALTER TABLE `user`
 -- AUTO_INCREMENT untuk tabel `galeri_gambar`
 --
 ALTER TABLE `galeri_gambar`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT untuk tabel `user`
 --
 ALTER TABLE `user`
-  MODIFY `iduser` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
+  MODIFY `iduser` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
