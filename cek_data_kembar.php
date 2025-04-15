@@ -2,61 +2,20 @@
 require "koneksi.php";
 require "head.html";
 
-// Pengecekan koneksi database
-if (!isset($conn) || $conn->connect_error) {
-    die("Koneksi database gagal: " . (isset($conn) ? $conn->connect_error : "Variabel koneksi tidak terdefinisi"));
-}
-
-// Handle request POST untuk cek ID user
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST['iduser'])) {
-    $iduser = trim($_POST['iduser']);
-
-    if (!empty($iduser)) {
-        $stmt = $koneksi->prepare("SELECT iduser FROM user WHERE iduser = ?");
-        $stmt->bind_param("s", $iduser);
-        $stmt->execute();
-        $result = $stmt->get_result();
-        echo ($result->num_rows > 0) ? "exists" : "not_exists";
-        $stmt->close();
-    } else {
-        echo "invalid_input";
-    }
-    exit;
-}
-
-// Setup pagination dan pencarian
-$cari = isset($_GET['cari']) ? $_GET['cari'] : '';
-$dataPerHalaman = isset($_GET['dataPerHalaman']) ? (int)$_GET['dataPerHalaman'] : 5;
-$halAktif = isset($_GET['hal']) ? (int)$_GET['hal'] : 1;
-$offset = ($halAktif - 1) * $dataPerHalaman;
-
-$cariLike = "%$cari%";
-
-// Query data user dengan limit dan pencarian
-$stmt = $conn->prepare("SELECT * FROM user WHERE iduser LIKE ? OR username LIKE ? LIMIT ?, ?");
-$stmt->bind_param("ssii", $cariLike, $cariLike, $offset, $dataPerHalaman);
-$stmt->execute();
-$hasil = $stmt->get_result();
-
-// Hitung total data
-$stmtTotal = $conn->prepare("SELECT COUNT(*) as total FROM user WHERE iduser LIKE ? OR username LIKE ?");
-$stmtTotal->bind_param("ss", $cariLike, $cariLike);
-$stmtTotal->execute();
-$resultTotal = $stmtTotal->get_result();
-$totalData = $resultTotal->fetch_assoc()['total'];
-$jmlHal = ceil($totalData / $dataPerHalaman);
+$limitOptions = [5, 10, 25, 50, 100];
+$limit = isset($_GET['limit']) ? (int)$_GET['limit'] : 5;
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 ?>
-
 <!DOCTYPE html>
-<html lang="id">
+<html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Cek Data User</title>
-    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-    <link rel="stylesheet" href="css/styleku.css">
-    <script src="bootstrap/js/bootstrap.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="bootstrap/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/styleku.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="bootstrap/js/bootstrap.min.js"></script>
 </head>
 <body>
 <?php require "head.html"; ?>
@@ -64,69 +23,61 @@ $jmlHal = ceil($totalData / $dataPerHalaman);
 <div class="container mt-4">
     <h2 class="text-center mb-4">CEK DATA USER</h2>
 
-    <form action="" method="get" class="row g-2 mb-3">
+    <!-- Search and Limit Filter -->
+    <div class="row mb-3">
         <div class="col-md-6">
-            <input type="text" name="cari" class="form-control" placeholder="Cari user..." value="<?= htmlspecialchars($cari) ?>">
+            <input type="text" id="searchInput" class="form-control" placeholder="Cari ID user atau Username...">
         </div>
         <div class="col-md-3">
-            <select name="dataPerHalaman" class="form-select" onchange="this.form.submit()">
-                <?php foreach ([5, 10, 25, 50, 100] as $jumlah) {
-                    echo "<option value='$jumlah'" . ($dataPerHalaman == $jumlah ? " selected" : "") . ">$jumlah per halaman</option>";
-                } ?>
+            <select id="limitSelect" class="form-select">
+                <?php foreach ($limitOptions as $opt): ?>
+                    <option value="<?= $opt ?>" <?= ($opt === $limit) ? 'selected' : '' ?>><?= $opt ?> per halaman</option>
+                <?php endforeach; ?>
             </select>
         </div>
-        <div class="col-md-3">
-            <button type="submit" class="btn btn-primary w-100">Cari</button>
-        </div>
-    </form>
+    </div>
 
-    <table class="table table-striped table-hover">
-        <thead class="table-dark">
-            <tr>
-                <th>ID User</th>
-                <th>Username</th>
-                <th>Password</th>
-                <th>Status</th>
-            </tr>
-        </thead>
-        <tbody>
-        <?php if ($hasil->num_rows == 0): ?>
-            <tr>
-                <td colspan="4" class="text-center text-muted">Data tidak ditemukan</td>
-            </tr>
-        <?php else: 
-            while ($row = $hasil->fetch_assoc()): ?>
-            <tr>
-                <td><?= htmlspecialchars($row["iduser"]) ?></td>
-                <td><?= htmlspecialchars($row["username"]) ?></td>
-                <td><?= htmlspecialchars($row["password"]) ?></td>
-                <td><?= htmlspecialchars($row["status"]) ?></td>
-            </tr>
-        <?php endwhile; endif; ?>
-        </tbody>
-    </table>
-
-    <!-- Navigasi halaman -->
-    <nav>
-    <ul class="pagination justify-content-center">
-        <!-- Tombol Sebelumnya -->
-        <li class="page-item <?= ($halAktif <= 1) ? 'disabled' : '' ?>">
-            <a class="page-link" href="<?= ($halAktif > 1) ? '?hal=' . ($halAktif - 1) . '&cari=' . urlencode($cari) . '&dataPerHalaman=' . $dataPerHalaman : '#' ?>" tabindex="-1">Sebelumnya</a>
-        </li>
-
-        <!-- Nomor halaman -->
-        <?php for ($i = 1; $i <= $jmlHal; $i++): ?>
-            <li class="page-item <?= ($i == $halAktif) ? 'active' : '' ?>">
-                <a class="page-link" href="?hal=<?= $i ?>&cari=<?= urlencode($cari) ?>&dataPerHalaman=<?= $dataPerHalaman ?>"><?= $i ?></a>
-            </li>
-        <?php endfor; ?>
-
-        <!-- Tombol Berikutnya -->
-        <li class="page-item <?= ($halAktif >= $jmlHal) ? 'disabled' : '' ?>">
-            <a class="page-link" href="<?= ($halAktif < $jmlHal) ? '?hal=' . ($halAktif + 1) . '&cari=' . urlencode($cari) . '&dataPerHalaman=' . $dataPerHalaman : '#' ?>">Berikutnya</a>
-        </li>
-    </ul>
-</nav>
+    <!-- Tabel dan Pagination -->
+    <div id="userTableContainer">
+        <!-- Data akan dimuat via AJAX -->
+    </div>
 </div>
+
+<script>
+function loadUserData(keyword = '', limit = 5, page = 1) {
+    $.get('search_CekDataKembar_Ajax.php', {
+        keyword: keyword,
+        limit: limit,
+        page: page
+    }, function(data) {
+        $('#userTableContainer').html(data);
+    });
+}
+
+$(document).ready(function() {
+    let limit = $('#limitSelect').val();
+    let page = 1;
+    let keyword = '';
+
+    loadUserData(keyword, limit, page);
+
+    $('#searchInput, #limitSelect').on('input change', function() {
+        keyword = $('#searchInput').val();
+        limit = $('#limitSelect').val();
+        page = 1;
+        loadUserData(keyword, limit, page);
+    });
+
+    $(document).on('click', '.page-link', function(e) {
+        e.preventDefault();
+        const newPage = $(this).data('page');
+        if (newPage) {
+            keyword = $('#searchInput').val();
+            limit = $('#limitSelect').val();
+            loadUserData(keyword, limit, newPage);
+        }
+    });
+});
+</script>
 </body>
 </html>

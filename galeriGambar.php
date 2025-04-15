@@ -5,13 +5,11 @@ if (!isset($conn) || $conn->connect_error) {
     die("Koneksi database gagal. Silakan cek file koneksi.php");
 }
 
-// Pagination & Limit
 $limitOptions = [4, 8, 20, 40, 100];
 $limit = isset($_GET['limit']) && in_array((int)$_GET['limit'], $limitOptions) ? (int)$_GET['limit'] : 4;
 $page = isset($_GET['page']) ? max(1, (int)$_GET['page']) : 1;
 $offset = ($page - 1) * $limit;
 
-// Get data
 $total = $conn->query("SELECT COUNT(*) as total FROM galeri_gambar")->fetch_assoc()['total'];
 $totalPages = ceil($total / $limit);
 $result = $conn->query("SELECT * FROM galeri_gambar ORDER BY uploaded_at DESC LIMIT $limit OFFSET $offset");
@@ -25,8 +23,8 @@ $result = $conn->query("SELECT * FROM galeri_gambar ORDER BY uploaded_at DESC LI
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
     <link rel="stylesheet" href="css/styleku.css">
-    <script src="bootstrap/js/bootstrap.js"></script>
     <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <script src="bootstrap/js/bootstrap.js"></script>
     <style>
         .gallery-img:hover {
             transform: scale(1.05);
@@ -58,16 +56,19 @@ $result = $conn->query("SELECT * FROM galeri_gambar ORDER BY uploaded_at DESC LI
         </form>
     </div>
 
-    <!-- Filter Jumlah -->
-    <form method="get" class="form-inline mb-3">
-        <label for="limit" class="mr-2">Tampilkan:</label>
-        <select name="limit" id="limit" class="form-control mr-2" onchange="this.form.submit()">
-            <?php foreach ($limitOptions as $opt): ?>
-                <option value="<?= $opt ?>" <?= ($opt === $limit) ? 'selected' : '' ?>><?= $opt ?></option>
-            <?php endforeach; ?>
-        </select>
-        <span>gambar per halaman</span>
-    </form>
+    <!-- Filter & Search -->
+    <div class="row mb-3">
+        <div class="col-md-6">
+            <input type="text" id="cariInput" class="form-control" placeholder="Cari nama gambar...">
+        </div>
+        <div class="col-md-3">
+            <select id="limitSelect" class="form-control">
+                <?php foreach ($limitOptions as $opt): ?>
+                    <option value="<?= $opt ?>" <?= ($opt === $limit) ? 'selected' : '' ?>><?= $opt ?> per halaman</option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+    </div>
 
     <!-- Galeri -->
     <div class="row" id="galleryContainer">
@@ -94,26 +95,21 @@ $result = $conn->query("SELECT * FROM galeri_gambar ORDER BY uploaded_at DESC LI
     </div>
 
     <!-- Pagination -->
-<nav>
-    <ul class="pagination justify-content-center">
-        <!-- Tombol Sebelumnya -->
-        <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
-            <a class="page-link" href="?page=<?= $page - 1 ?>&limit=<?= $limit ?>" tabindex="-1">Sebelumnya</a>
-        </li>
-
-        <!-- Tombol Halaman Angka -->
-        <?php for ($i = 1; $i <= $totalPages; $i++): ?>
-            <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
-                <a class="page-link" href="?page=<?= $i ?>&limit=<?= $limit ?>"><?= $i ?></a>
+    <nav>
+        <ul class="pagination justify-content-center">
+            <li class="page-item <?= ($page <= 1) ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= $page - 1 ?>&limit=<?= $limit ?>">Sebelumnya</a>
             </li>
-        <?php endfor; ?>
-
-        <!-- Tombol Berikutnya -->
-        <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
-            <a class="page-link" href="?page=<?= $page + 1 ?>&limit=<?= $limit ?>">Berikutnya</a>
-        </li>
-    </ul>
-</nav>
+            <?php for ($i = 1; $i <= $totalPages; $i++): ?>
+                <li class="page-item <?= ($i == $page) ? 'active' : '' ?>">
+                    <a class="page-link" href="?page=<?= $i ?>&limit=<?= $limit ?>"><?= $i ?></a>
+                </li>
+            <?php endfor; ?>
+            <li class="page-item <?= ($page >= $totalPages) ? 'disabled' : '' ?>">
+                <a class="page-link" href="?page=<?= $page + 1 ?>&limit=<?= $limit ?>">Berikutnya</a>
+            </li>
+        </ul>
+    </nav>
 </div>
 
 <script>
@@ -152,6 +148,16 @@ $(document).ready(function() {
             error: function() {
                 $('#uploadMessage').addClass('alert alert-danger').text('Terjadi kesalahan saat mengunggah.');
             }
+        });
+    });
+
+    // Live Search
+    $('#cariInput, #limitSelect').on('input change', function() {
+        const keyword = $('#cariInput').val();
+        const limit = $('#limitSelect').val();
+
+        $.get('search_GaleriGambar_Ajax.php', { keyword: keyword, limit: limit }, function(data) {
+            $('#galleryContainer').html(data);
         });
     });
 });
