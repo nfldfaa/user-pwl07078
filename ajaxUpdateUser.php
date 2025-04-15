@@ -1,31 +1,63 @@
 <?php
-require "fungsi.php";
+require "koneksi.php";
 require "head.html";
 
-$dataPerHalaman = isset($_GET['dataPerHalaman']) ? $_GET['dataPerHalaman'] : 10;
-$cari = isset($_GET['cari']) ? $_GET['cari'] : '';
+// Pengecekan koneksi database
+if (!isset($conn) || $conn->connect_error) {
+    die("Koneksi database gagal: " . (isset($conn) ? $conn->connect_error : "Variabel koneksi tidak terdefinisi"));
+}
 
-$sql = $cari ? "SELECT * FROM user WHERE iduser LIKE '%$cari%' OR username LIKE '%$cari%'" : "SELECT * FROM user";
-$qry = mysqli_query($koneksi, $sql);
-$jmlData = mysqli_num_rows($qry);
+$dataPerHalaman = isset($_GET['dataPerHalaman']) ? (int)$_GET['dataPerHalaman'] : 10;
+$cari = isset($_GET['cari']) ? $conn->real_escape_string($_GET['cari']) : '';
+
+// Query dasar dengan proteksi SQL injection
+$sql = "SELECT * FROM user";
+if (!empty($cari)) {
+    $sql .= " WHERE iduser LIKE '%$cari%' OR username LIKE '%$cari%'";
+}
+
+// Hitung total data
+$qry = $conn->query($sql);
+if ($qry === false) {
+    die("Error dalam query: " . $conn->error);
+}
+
+$jmlData = $qry->num_rows;
 $jmlHal = ceil($jmlData / $dataPerHalaman);
-$halAktif = isset($_GET['hal']) ? $_GET['hal'] : 1;
+$halAktif = isset($_GET['hal']) ? (int)$_GET['hal'] : 1;
 $awalData = ($dataPerHalaman * $halAktif) - $dataPerHalaman;
-$kosong = !$jmlData;
+$kosong = ($jmlData == 0);
 
+// Query dengan pagination
 $sql .= " LIMIT $awalData, $dataPerHalaman";
-$hasil = mysqli_query($koneksi, $sql);
+$hasil = $conn->query($sql);
+if ($hasil === false) {
+    die("Error dalam query pagination: " . $conn->error);
+}
 ?>
+
 <!DOCTYPE html>
 <html lang="id">
 <head>
+    <title>Daftar User</title>
     <meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<!-- Bootstrap lokal -->
-	<link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
-	<link rel="stylesheet" type="text/css" href="css/styleku.css">
-	<script src="bootstrap/js/bootstrap.js"></script>
-	<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap lokal -->
+    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="css/styleku.css">
+    <script src="bootstrap/js/bootstrap.js"></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        .error {
+            color: red;
+            font-size: 0.9em;
+            display: none;
+        }
+        #ajaxResponse {
+            margin-top: 15px;
+        }
+    </style>
 </head>
 <body>
     <div class="container mt-4">
@@ -35,7 +67,7 @@ $hasil = mysqli_query($koneksi, $sql);
         </div>
 
         <form action="" method="get" class="d-flex mb-3">
-            <input class="form-control me-2" type="text" name="cari" placeholder="Cari user..." value="<?php echo $cari; ?>">
+            <input class="form-control me-2" type="text" name="cari" placeholder="Cari user..." value="<?php echo htmlspecialchars($cari); ?>">
             <button class="btn btn-primary me-2" type="submit">Cari</button>
             <select name="dataPerHalaman" class="form-control" onchange="this.form.submit()">
                 <?php foreach ([5, 10, 25, 50, 100] as $size) {
@@ -58,7 +90,7 @@ $hasil = mysqli_query($koneksi, $sql);
                 <?php if ($kosong) { ?>
                     <tr><td colspan="5" class="text-center alert alert-info">Data tidak ada</td></tr>
                 <?php } else {
-                    while ($row = mysqli_fetch_assoc($hasil)) { ?>
+                    while ($row = $hasil->fetch_assoc()) { ?>
                         <tr>
                             <td><?php echo htmlspecialchars($row["iduser"]); ?></td>
                             <td><?php echo htmlspecialchars($row["username"]); ?></td>
@@ -76,15 +108,15 @@ $hasil = mysqli_query($koneksi, $sql);
         <nav>
             <ul class="pagination justify-content-center">
                 <?php if ($halAktif > 1) { ?>
-                    <li class="page-item"><a class="page-link" href="?hal=<?php echo $halAktif - 1; ?>&cari=<?php echo $cari; ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>">Previous</a></li>
+                    <li class="page-item"><a class="page-link" href="?hal=<?php echo $halAktif - 1; ?>&cari=<?php echo urlencode($cari); ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>">Previous</a></li>
                 <?php }
                 for ($i = 1; $i <= $jmlHal; $i++) { ?>
                     <li class="page-item <?php echo ($i == $halAktif) ? 'active' : ''; ?>">
-                        <a class="page-link" href="?hal=<?php echo $i; ?>&cari=<?php echo $cari; ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>"> <?php echo $i; ?> </a>
+                        <a class="page-link" href="?hal=<?php echo $i; ?>&cari=<?php echo urlencode($cari); ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>"> <?php echo $i; ?> </a>
                     </li>
                 <?php }
                 if ($halAktif < $jmlHal) { ?>
-                    <li class="page-item"><a class="page-link" href="?hal=<?php echo $halAktif + 1; ?>&cari=<?php echo $cari; ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>">Next</a></li>
+                    <li class="page-item"><a class="page-link" href="?hal=<?php echo $halAktif + 1; ?>&cari=<?php echo urlencode($cari); ?>&dataPerHalaman=<?php echo $dataPerHalaman; ?>">Next</a></li>
                 <?php } ?>
             </ul>
         </nav>
@@ -92,33 +124,32 @@ $hasil = mysqli_query($koneksi, $sql);
 
     <script>
         $(document).ready(function() {
-        $('.delete-btn').on('click', function(e) {
-        e.preventDefault();
-        var userId = $(this).data('id'); // Mengambil ID user dari atribut data-id
-        var row = $(this).closest('tr'); // Mendapatkan baris tabel terkait
+            $('.delete-btn').on('click', function(e) {
+                e.preventDefault();
+                var userId = $(this).data('id');
+                var row = $(this).closest('tr');
 
-        // Menampilkan konfirmasi penghapusan
-        if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
-            $.ajax({
-                url: 'hpsUser.php', // File PHP untuk menghapus user
-                type: 'POST',
-                data: { iduser: userId },
-                dataType: 'json', // Format data yang diharapkan dari server
-                success: function(response) {
-                    if (response.status === 'success') {
-                        alert('Data berhasil dihapus!');
-                        row.fadeOut(500, function() { $(this).remove(); }); // Menghapus baris dengan animasi
-                    } else {
-                        alert('Gagal menghapus data: ' + response.message);
-                    }
-                },
-                error: function(xhr, status, error) {
-                    alert('Terjadi kesalahan: ' + error);
+                if (confirm('Apakah Anda yakin ingin menghapus user ini?')) {
+                    $.ajax({
+                        url: 'hpsUser.php',
+                        type: 'POST',
+                        data: { iduser: userId },
+                        dataType: 'json',
+                        success: function(response) {
+                            if (response.status === 'success') {
+                                alert('Data berhasil dihapus!');
+                                row.fadeOut(500, function() { $(this).remove(); });
+                            } else {
+                                alert('Gagal menghapus data: ' + response.message);
+                            }
+                        },
+                        error: function(xhr, status, error) {
+                            alert('Terjadi kesalahan: ' + error);
+                        }
+                    });
                 }
             });
-        }
-    });
-});
+        });
     </script>
 </body>
 </html>

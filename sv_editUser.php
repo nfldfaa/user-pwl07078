@@ -1,6 +1,6 @@
 <?php
 // Memanggil file pustaka fungsi
-require "fungsi.php";
+require "koneksi.php";
 
 // Pastikan data dikirim melalui metode POST
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -12,7 +12,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // Query update dengan prepared statement
     $sql = "UPDATE user SET username = ?, password = ?, status = ? WHERE iduser = ?";
-    $stmt = $koneksi->prepare($sql);
+    $stmt = $conn->prepare($sql);
     $stmt->bind_param("ssss", $username, $password, $status, $iduser);
 
     // Eksekusi query

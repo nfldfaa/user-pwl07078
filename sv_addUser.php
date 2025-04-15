@@ -1,6 +1,6 @@
 <?php
 // Memanggil file pustaka fungsi
-require "fungsi.php";
+require "koneksi.php";
 
 // Memindahkan data kiriman dari form ke variabel biasa
 $username = $_POST["username"];
@@ -9,7 +9,7 @@ $status = $_POST["status"];
 
 // Query untuk menyimpan data tanpa ID User (karena auto-increment)
 $sql = "INSERT INTO user (username, password, status) VALUES (?, ?, ?)";
-$stmt = $koneksi->prepare($sql);
+$stmt = $conn->prepare($sql);
 $stmt->bind_param("sss", $username, $password, $status);
 
 if ($stmt->execute()) {

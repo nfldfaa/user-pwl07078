@@ -1,5 +1,5 @@
 <?php
-require "fungsi.php";
+require "koneksi.php";
 error_reporting(E_ALL);
 ini_set('display_errors', 1);
 
@@ -7,7 +7,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["iduser"])) {
     $id = intval($_POST["iduser"]); // Pastikan ID angka
 
     $sql = "DELETE FROM user WHERE iduser = ?";
-    $stmt = $koneksi->prepare($sql);
+    $stmt = $conn->prepare($sql);
     $stmt->bind_param("i", $id);
 
     if ($stmt->execute()) {
@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST["iduser"])) {
     }
 
     $stmt->close();
-    $koneksi->close();
+    $conn->close();
 } else {
     echo json_encode(["status" => "error", "message" => "Invalid request"]);
 }

@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Waktu pembuatan: 23 Mar 2025 pada 16.33
+-- Waktu pembuatan: 15 Apr 2025 pada 16.33
 -- Versi server: 10.4.32-MariaDB
 -- Versi PHP: 8.2.12
 
@@ -20,6 +20,32 @@ SET time_zone = "+00:00";
 --
 -- Database: `pwl07078`
 --
+
+-- --------------------------------------------------------
+
+--
+-- Struktur dari tabel `galeri_gambar`
+--
+
+CREATE TABLE `galeri_gambar` (
+  `id` int(11) NOT NULL,
+  `filename` varchar(255) NOT NULL,
+  `filepath` varchar(255) NOT NULL,
+  `thumbpath` varchar(255) NOT NULL,
+  `width` int(11) NOT NULL,
+  `height` int(11) NOT NULL,
+  `uploaded_at` int(11) NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data untuk tabel `galeri_gambar`
+--
+
+INSERT INTO `galeri_gambar` (`id`, `filename`, `filepath`, `thumbpath`, `width`, `height`, `uploaded_at`) VALUES
+(5, 'farmer (2).png', 'gambar/uploads/67fe597786454_1744722295.png', 'gambar/thumbs/thumb_67fe597786454_1744722295.png', 512, 512, 2147483647),
+(6, 'animal (1).png', 'gambar/uploads/67fe5b871de86_1744722823.png', 'gambar/thumbs/thumb_67fe5b871de86_1744722823.png', 512, 512, 2147483647),
+(7, 'watering-can.png', 'gambar/uploads/67fe5bcc145af_1744722892.png', 'gambar/thumbs/thumb_67fe5bcc145af_1744722892.png', 512, 512, 2147483647),
+(8, 'talking.png', 'gambar/uploads/67fe6d7b4311d_1744727419.png', 'gambar/thumbs/thumb_67fe6d7b4311d_1744727419.png', 512, 512, 2147483647);
 
 -- --------------------------------------------------------
 
@@ -51,11 +77,18 @@ INSERT INTO `user` (`iduser`, `username`, `password`, `status`) VALUES
 (15, 'ascsacsac', '$2y$10$Qq/IhaibdRl0dBJU95J9cOmdL', 'dad'),
 (16, 'cc', '1', '1'),
 (17, 'Daffa Naufal Athallah', 'DaffaGantenf01', 'hadir'),
-(18, 'Naufal Daffa', 'Pipiyo01', 'Izin');
+(18, 'Naufal Daffa', 'Pipiyo01', 'Izin'),
+(21, 'daffaganteng', 'pipiyo04', 'hadir');
 
 --
 -- Indexes for dumped tables
 --
+
+--
+-- Indeks untuk tabel `galeri_gambar`
+--
+ALTER TABLE `galeri_gambar`
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indeks untuk tabel `user`
@@ -68,10 +101,16 @@ ALTER TABLE `user`
 --
 
 --
+-- AUTO_INCREMENT untuk tabel `galeri_gambar`
+--
+ALTER TABLE `galeri_gambar`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
+
+--
 -- AUTO_INCREMENT untuk tabel `user`
 --
 ALTER TABLE `user`
-  MODIFY `iduser` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `iduser` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

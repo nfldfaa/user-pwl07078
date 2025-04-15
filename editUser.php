@@ -10,13 +10,13 @@
 </head>
 <body>
 	<?php
-	require "fungsi.php";
+	require "koneksi.php";
 	require "head.html";
 
 	$id = isset($_GET['kode']) ? $_GET['kode'] : '';
 
 	if (!empty($id)) {
-		$stmt = $koneksi->prepare("SELECT * FROM user WHERE iduser = ?");
+		$stmt = $conn->prepare("SELECT * FROM user WHERE iduser = ?");
 		$stmt->bind_param("s", $id);
 		$stmt->execute();
 		$result = $stmt->get_result();

@@ -1,6 +1,6 @@
 <?php 
 session_start(); // Memulai session
-require "fungsi.php"; // Pastikan koneksi ke database benar
+require "koneksi.php"; // Pastikan koneksi ke database benar
 
 // Jika sudah login, redirect ke homeadmin.php
 if (isset($_SESSION['iduser'])) { 

@@ -15,7 +15,7 @@
 <body>
 <?php
 //memanggil file berisi fungsi2 yang sering dipakai
-require "fungsi.php";
+require "koneksi.php";
 require "head.html";
 
 //cek logout
