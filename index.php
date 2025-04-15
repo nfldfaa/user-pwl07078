@@ -17,7 +17,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     if (!empty($username) && !empty($passw)) {
         // Gunakan prepared statement untuk mencegah SQL Injection
         $sql1 = "SELECT * FROM user WHERE username = ?";
-        $stmt = $koneksi->prepare($sql1);
+        $stmt = $conn->prepare($sql1);
         $stmt->bind_param('s', $username);
         $stmt->execute();
         $result = $stmt->get_result();
